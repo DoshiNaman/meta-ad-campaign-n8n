@@ -1,0 +1,368 @@
+{
+  "name": "Visa Leads Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "08a5f0d7-a84b-4fba-bd71-387d1b79c762",
+      "name": "Check Every 5 Min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const CONFIG = {\n  META_ACCESS_TOKEN: '',\n  META_PAGE_ID: '',\n  META_AD_ACCOUNT_ID: '',\n  SPREADSHEET_ID: ''\n};\nreturn [{ json: CONFIG }];"
+      },
+      "id": "0ec25e18-2ca5-4810-bb36-45b31309d866",
+      "name": "⚙️ Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY",
+          "mode": "list",
+          "cachedResultName": "Visa Ad Automation - Test"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Ad Campaigns",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "672c740f-e5e1-4f70-9ace-b099d4f68168",
+      "name": "Read Ad Campaigns",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        432,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Dq8gwWNvo1Lo2KtO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "has-form-id",
+              "leftValue": "={{ $json.created_form_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "is-done",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "done",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "879945e7-f3b1-4111-a820-f72b0f933ad4",
+      "name": "Filter: Has Form ID",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v25.0/{{ $json.created_form_id }}/leads?fields=id,created_time,field_data,ad_id,ad_name,campaign_name&limit=50&access_token={{ $('⚙️ Config').first().json.META_ACCESS_TOKEN }}",
+        "options": {}
+      },
+      "id": "9e31f46d-0c30-4cd9-8583-a55436ded090",
+      "name": "Fetch Leads from Meta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('⚙️ Config').first().json.SPREADSHEET_ID }}/values/{{ encodeURIComponent(\"'\" + ('Leads - ' + ($('Filter: Has Form ID').first().json.brief || 'Unknown').toString().replace(/[^a-zA-Z0-9 ]/g, '').substring(0, 40).trim()) + \"'\") }}!A:A",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1088,
+        0
+      ],
+      "id": "9b037d5e-0ef7-401c-9c7f-d74b1cb9556c",
+      "name": "Read Existing Leads",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Dq8gwWNvo1Lo2KtO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const config = $('⚙️ Config').first().json;\nconst campaignRow = $('Filter: Has Form ID').first().json;\nconst existingLeadsResponse = $('Read Existing Leads').first().json;\n\n// Explicitly reference Fetch Leads from Meta, NOT $input\nconst metaResponse = $('Fetch Leads from Meta').first().json;\nconst leads = metaResponse.data || [];\n\nif (leads.length === 0) return [];\n\n// Build set of existing lead IDs from sheet column A\nconst existingIds = new Set();\nconst existingValues = existingLeadsResponse.values || [];\nfor (const row of existingValues) {\n  if (row[0] && row[0] !== 'lead_id') {\n    existingIds.add(row[0]);\n  }\n}\n\nconst briefText = (campaignRow.brief || 'Unknown').toString();\nconst sheetTabName = 'Leads - ' + briefText.replace(/[^a-zA-Z0-9 ]/g, '').substring(0, 40).trim();\n\nconst parsedLeads = [];\nfor (const lead of leads) {\n  if (existingIds.has(lead.id)) continue;\n\n  const fieldData = lead.field_data || [];\n  const getField = (key) => {\n    const field = fieldData.find(f => f.name === key);\n    return field ? field.values[0] : '';\n  };\n\n  parsedLeads.push({\n    lead_id: lead.id,\n    full_name: getField('full_name'),\n    email: getField('email'),\n    phone: getField('phone_number'),\n    preferred_country: getField('preferred_country'),\n    campaign_brief: briefText.substring(0, 80),\n    ad_name: lead.ad_name || '',\n    form_id: campaignRow.created_form_id,\n    submitted_at: lead.created_time,\n    status: 'new',\n    sheet_tab_name: sheetTabName,\n    spreadsheet_id: config.SPREADSHEET_ID\n  });\n}\n\nif (parsedLeads.length === 0) return [];\n\nreturn parsedLeads.map(lead => ({ json: lead }));"
+      },
+      "id": "0a10bf9b-9886-4b90-8fda-9c9887bfa5a9",
+      "name": "Parse Leads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1296,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheet_id }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": [{\n    \"addSheet\": {\n      \"properties\": {\n        \"title\": \"{{ $json.sheet_tab_name }}\"\n      }\n    }\n  }]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "34e59493-ed89-4338-a071-23b4c1645194",
+      "name": "Create Sheet Tab (if new)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Dq8gwWNvo1Lo2KtO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Parse Leads').item.json.spreadsheet_id }}/values/{{ encodeURIComponent(\"'\" + $('Parse Leads').item.json.sheet_tab_name + \"'\") }}!A1:I1?valueInputOption=USER_ENTERED",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"values\": [[\"lead_id\", \"full_name\", \"email\", \"phone\", \"preferred_country\", \"campaign_brief\", \"submitted_at\", \"status\", \"notes\"]]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "4ac29abe-cae2-4206-8b5a-b78912aae39b",
+      "name": "Add Headers to Tab",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1744,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Dq8gwWNvo1Lo2KtO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Parse Leads').item.json.spreadsheet_id }}/values/{{ encodeURIComponent(\"'\" + $('Parse Leads').item.json.sheet_tab_name + \"'\") }}!A:I:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"values\": [[\n    \"{{ $('Parse Leads').item.json.lead_id }}\",\n    \"{{ $('Parse Leads').item.json.full_name }}\",\n    \"{{ $('Parse Leads').item.json.email }}\",\n    \"{{ $('Parse Leads').item.json.phone }}\",\n    \"{{ $('Parse Leads').item.json.preferred_country }}\",\n    \"{{ $('Parse Leads').item.json.campaign_brief }}\",\n    \"{{ $('Parse Leads').item.json.submitted_at }}\",\n    \"{{ $('Parse Leads').item.json.status }}\",\n    \"\"\n  ]]\n}",
+        "options": {}
+      },
+      "id": "28594a16-1965-45ea-aa71-e56a09b153db",
+      "name": "Write Lead to Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1984,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Dq8gwWNvo1Lo2KtO",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Check Every 5 Min": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Config": {
+      "main": [
+        [
+          {
+            "node": "Read Ad Campaigns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Ad Campaigns": {
+      "main": [
+        [
+          {
+            "node": "Filter: Has Form ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter: Has Form ID": {
+      "main": [
+        [
+          {
+            "node": "Fetch Leads from Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Leads from Meta": {
+      "main": [
+        [
+          {
+            "node": "Read Existing Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Existing Leads": {
+      "main": [
+        [
+          {
+            "node": "Parse Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Leads": {
+      "main": [
+        [
+          {
+            "node": "Create Sheet Tab (if new)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sheet Tab (if new)": {
+      "main": [
+        [
+          {
+            "node": "Add Headers to Tab",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Headers to Tab": {
+      "main": [
+        [
+          {
+            "node": "Write Lead to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "634712e4-406f-4de6-9ad3-fa77746e1e35",
+  "meta": {
+    "instanceId": "25e830725534faf13695e5fe80f63d017be13487197c74bfe8f840b7a7545d9d"
+  },
+  "id": "wcIbbK36xwxkZSpn",
+  "tags": []
+}

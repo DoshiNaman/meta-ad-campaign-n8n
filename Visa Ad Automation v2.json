@@ -1,0 +1,1107 @@
+{
+  "name": "Visa Ad Automation v2",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "99516f0b-a549-417e-920a-3f695490f1a8",
+      "name": "Check Every 30 Min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1744,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// CONFIGURATION - EDIT THESE VALUES ONLY\n// ============================================\n\nconst CONFIG = {\n  // Meta Ad Account ID (WITHOUT 'act_' prefix)\n META_AD_ACCOUNT_ID: '',\n\n  // Meta Access Token (from Graph API Explorer)\n  // Regenerate at: developers.facebook.com/tools/explorer/\n  META_ACCESS_TOKEN: '',\n\n  // Facebook Page ID\n  // Find at: Page Settings > Page Info\n  META_PAGE_ID: '',\n\n  // Landing Page URL (client's website)\n  LANDING_PAGE_URL: 'https://example.com',\n\n  // OpenRouter API Key\n  OPENROUTER_API_KEY: '',\n\n  // AI Model (change if needed)\n  AI_MODEL: 'openai/gpt-4o-mini'\n};\n\n// ============================================\n// DO NOT EDIT BELOW THIS LINE\n// ============================================\nreturn [{ json: CONFIG }];"
+      },
+      "id": "9046cbba-6acd-4c49-b449-103f456280cc",
+      "name": "⚙️ Config (EDIT THIS)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1536,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY",
+          "mode": "list",
+          "cachedResultName": "Visa Ad Automation - Test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Ad Campaigns",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "17fb3320-c4f1-433c-94f1-c19a5e70904a",
+      "name": "Read Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1328,
+        128
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Dq8gwWNvo1Lo2KtO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-status",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "43a79cba-047e-494f-8a95-a5fbe5ea39d6",
+      "name": "Filter Pending Rows",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -1104,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY",
+          "mode": "list",
+          "cachedResultName": "Visa Ad Automation - Test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Ad Campaigns",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_id": "={{ $json.row_id }}",
+            "status": "processing"
+          },
+          "matchingColumns": [
+            "row_id"
+          ],
+          "schema": [
+            {
+              "id": "row_id",
+              "displayName": "row_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "brief",
+              "displayName": "brief",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "scheduled_date",
+              "displayName": "scheduled_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "scheduled_time",
+              "displayName": "scheduled_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "daily_budget_inr",
+              "displayName": "daily_budget_inr",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "platform",
+              "displayName": "platform",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "campaign_id",
+              "displayName": "campaign_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_campaign_id",
+              "displayName": "created_campaign_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_adset_id",
+              "displayName": "created_adset_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_ad_id",
+              "displayName": "created_ad_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ai_generated_copy",
+              "displayName": "ai_generated_copy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "188f0c1c-6fff-4cd4-839d-686a74dd367d",
+      "name": "Set Status Processing",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -880,
+        128
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Dq8gwWNvo1Lo2KtO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"{{ $('⚙️ Config (EDIT THIS)').first().json.AI_MODEL }}\",\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an expert Facebook Ads strategist specializing in Indian education and visa consultancy marketing. Your target audience is Indian students aged 18-30 who want to study abroad.\\n\\nGiven a campaign brief from a visa consultancy, generate a complete ad campaign setup as a JSON object.\\n\\nCRITICAL RULES:\\n- NEVER target age above 30\\n- ALWAYS include study abroad and test prep interests\\n- Budget values must be in PAISE (multiply INR by 100)\\n- Ad copy must NEVER guarantee visa approval\\n- Use language like 'expert guidance', 'personalized consultation', 'trusted advisors'\\n- Generate 2 ad copy variants for A/B testing\\n- Include relevant hashtags for organic reach\\n- The ad must feel human, emotional, and aspirational\\n\\nReturn ONLY a valid JSON object in this exact format:\\n{\\n  \\\"campaign_name\\\": \\\"descriptive name based on brief\\\",\\n  \\\"ad_set_name\\\": \\\"descriptive ad set name\\\",\\n  \\\"targeting\\\": {\\n    \\\"age_min\\\": 18,\\n    \\\"age_max\\\": 30,\\n    \\\"geo_locations\\\": {\\n      \\\"countries\\\": [\\\"IN\\\"],\\n      \\\"cities\\\": [{\\\"key\\\": \\\"2771943\\\", \\\"name\\\": \\\"Delhi\\\"}, {\\\"key\\\": \\\"2772935\\\", \\\"name\\\": \\\"Mumbai\\\"}, {\\\"key\\\": \\\"2771157\\\", \\\"name\\\": \\\"Ahmedabad\\\"}, {\\\"key\\\": \\\"2774009\\\", \\\"name\\\": \\\"Pune\\\"}, {\\\"key\\\": \\\"2772940\\\", \\\"name\\\": \\\"Bangalore\\\"}]\\n    },\\n    \\\"flexible_spec\\\": [{\\n      \\\"interests\\\": [\\n        {\\\"id\\\": \\\"6003012175633\\\", \\\"name\\\": \\\"Study abroad\\\"},\\n        {\\\"id\\\": \\\"6003395407822\\\", \\\"name\\\": \\\"IELTS\\\"},\\n        {\\\"id\\\": \\\"6003205898084\\\", \\\"name\\\": \\\"Higher education\\\"},\\n        {\\\"id\\\": \\\"6003139266461\\\", \\\"name\\\": \\\"TOEFL\\\"},\\n        {\\\"id\\\": \\\"6003384248805\\\", \\\"name\\\": \\\"Master's degree\\\"}\\n      ]\\n    }],\\n    \\\"publisher_platforms\\\": [\\\"facebook\\\", \\\"instagram\\\"],\\n    \\\"facebook_positions\\\": [\\\"feed\\\", \\\"story\\\", \\\"reel\\\"],\\n    \\\"instagram_positions\\\": [\\\"stream\\\", \\\"story\\\", \\\"reels\\\", \\\"explore\\\"]\\n  },\\n  \\\"ad_copies\\\": [\\n    {\\n      \\\"headline\\\": \\\"max 40 chars - punchy headline\\\",\\n      \\\"primary_text\\\": \\\"125-300 chars - compelling ad body with emoji\\\",\\n      \\\"description\\\": \\\"max 30 chars\\\",\\n      \\\"call_to_action\\\": \\\"LEARN_MORE\\\",\\n      \\\"hashtags\\\": \\\"#relevant #hashtags\\\"\\n    },\\n    {\\n      \\\"headline\\\": \\\"variant 2\\\",\\n      \\\"primary_text\\\": \\\"variant 2 body\\\",\\n      \\\"description\\\": \\\"variant 2 desc\\\",\\n      \\\"call_to_action\\\": \\\"SIGN_UP\\\",\\n      \\\"hashtags\\\": \\\"#relevant #hashtags\\\"\\n    }\\n  ],\\n  \\\"rationale\\\": \\\"Brief explanation of strategy\\\"\\n}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Campaign brief: {{ $json.brief }}\\nDaily budget: {{ $json.daily_budget_inr }} INR\\nPlatform: {{ $json.platform }}\"\n    }\n  ]\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "2f009bcf-0dbe-4a2b-a30f-bf1a8e171348",
+      "name": "AI Generate Campaign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -656,
+        128
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "BwujWLddBqYNXHWs",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse AI response\nconst aiResponse = $input.first().json;\nconst aiContent = aiResponse.choices[0].message.content;\nconst campaign = JSON.parse(aiContent);\n\n// Get config\nconst config = $('⚙️ Config (EDIT THIS)').first().json;\n\n// Get original sheet data\nconst sheetData = $('Filter Pending Rows').first().json;\n\n// Calculate budget in paise\nconst dailyBudgetPaise = (parseInt(sheetData.daily_budget_inr) * 100).toString();\n\n// Determine if using existing campaign\nconst existingCampaignId = sheetData.campaign_id && sheetData.campaign_id.toString().trim() !== '' \n  ? sheetData.campaign_id.toString().trim() \n  : null;\n\n// Pick first ad copy variant\nconst adCopy = campaign.ad_copies[0];\n\n// Build targeting WITHOUT interests (use broad targeting)\n// Meta Advantage+ will optimize delivery based on age + location\nconst safeTargeting = {\n  age_min: 18,\n  age_max: 30,\n  geo_locations: {\n    countries: [\"IN\"],\n    cities: [\n      {\"key\": \"2771943\", \"name\": \"Delhi\"},\n      {\"key\": \"2772935\", \"name\": \"Mumbai\"},\n      {\"key\": \"2771157\", \"name\": \"Ahmedabad\"},\n      {\"key\": \"2774009\", \"name\": \"Pune\"},\n      {\"key\": \"2772940\", \"name\": \"Bangalore\"}\n    ]\n  },\n  publisher_platforms: [\"facebook\", \"instagram\"],\n  instagram_positions: [\"stream\", \"story\", \"reels\", \"explore\"],\n  targeting_automation: {\n    advantage_audience: 0\n  }\n};\n\nreturn [{\n  json: {\n    // Config values\n    ad_account_id: config.META_AD_ACCOUNT_ID,\n    access_token: config.META_ACCESS_TOKEN,\n    page_id: config.META_PAGE_ID,\n    landing_url: config.LANDING_PAGE_URL,\n    \n    // Original sheet data\n    row_id: sheetData.row_id,\n    image_url: sheetData.image_url,\n    platform: sheetData.platform,\n    \n    // Campaign config\n    campaign_name: campaign.campaign_name,\n    ad_set_name: campaign.ad_set_name,\n    daily_budget_paise: dailyBudgetPaise,\n    existing_campaign_id: existingCampaignId,\n    \n    // Use safe targeting (no invalid interest IDs)\n    targeting: JSON.stringify(safeTargeting),\n    \n    // Ad creative content\n    headline: adCopy.headline,\n    primary_text: adCopy.primary_text + '\\n\\n' + adCopy.hashtags,\n    description: adCopy.description,\n    call_to_action: adCopy.call_to_action,\n    \n    // Full AI output for logging\n    ai_full_output: aiContent,\n    rationale: campaign.rationale,\n    all_copies: JSON.stringify(campaign.ad_copies)\n  }\n}];"
+      },
+      "id": "17c4af9d-4a2f-4ddd-b164-5e5d25ca5f4f",
+      "name": "Parse AI Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-campaign-id",
+              "leftValue": "={{ $json.existing_campaign_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "906a7724-cf41-462a-9cce-f96bc9d865ce",
+      "name": "Has Campaign ID?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -224,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v25.0/act_{{ $json.ad_account_id }}/campaigns",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=name",
+              "value": "={{ $json.campaign_name }}"
+            },
+            {
+              "name": "=objective",
+              "value": "OUTCOME_LEADS"
+            },
+            {
+              "name": "status",
+              "value": "PAUSED"
+            },
+            {
+              "name": "special_ad_categories",
+              "value": "[]"
+            },
+            {
+              "name": "is_adset_budget_sharing_enabled",
+              "value": "false"
+            },
+            {
+              "name": "access_token",
+              "value": "={{ $json.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0fdbadd6-6b3c-4da3-935d-5d9c947aba1e",
+      "name": "Create Campaign (PAUSED)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Use existing campaign ID from sheet\nconst data = $('Parse AI Output').first().json;\nreturn [{\n  json: {\n    ...data,\n    campaign_id: data.existing_campaign_id\n  }\n}];"
+      },
+      "id": "b15b1619-20a4-4a19-b283-3361c6bbce72",
+      "name": "Use Existing Campaign ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get campaign ID from either path\nconst parseData = $('Parse AI Output').first().json;\nlet campaignId;\n\ntry {\n  campaignId = $('Create Campaign (PAUSED)').first().json.id;\n} catch(e) {\n  campaignId = $('Use Existing Campaign ID').first().json.campaign_id;\n}\n\nreturn [{\n  json: {\n    ...parseData,\n    campaign_id: campaignId\n  }\n}];"
+      },
+      "id": "4a79fadf-66b5-41ab-9d05-bbb2e7744f83",
+      "name": "Merge Campaign ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v25.0/act_{{ $json.ad_account_id }}/adsets",
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "=name={{ encodeURIComponent($json.ad_set_name) }}&campaign_id={{ $json.campaign_id }}&daily_budget={{ $json.daily_budget_paise }}&billing_event=IMPRESSIONS&optimization_goal=LEAD_GENERATION&bid_strategy=LOWEST_COST_WITHOUT_CAP&destination_type=ON_AD&promoted_object={\"page_id\":\"{{ $json.page_id }}\"}&targeting={{ encodeURIComponent($json.targeting) }}&status=PAUSED&access_token={{ $json.access_token }}",
+        "options": {}
+      },
+      "id": "e35d9c67-0f06-4986-9851-7b4de3ce1761",
+      "name": "Create Ad Set (PAUSED)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v25.0/act_{{ $('Merge Campaign ID').first().json.ad_account_id }}/adcreatives",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"Creative_{{ $('Merge Campaign ID').first().json.campaign_name }}\",\n  \"object_story_spec\": {\n    \"page_id\": \"{{ $('Merge Campaign ID').first().json.page_id }}\",\n    \"instagram_user_id\": \"17841405005738089\",\n    \"link_data\": {\n      \"picture\": \"{{ $('Merge Campaign ID').first().json.image_url }}\",\n      \"message\": {{ JSON.stringify($('Merge Campaign ID').first().json.primary_text) }},\n      \"link\": \"{{ $('Merge Campaign ID').first().json.landing_url }}\",\n      \"name\": {{ JSON.stringify($('Merge Campaign ID').first().json.headline) }},\n      \"description\": {{ JSON.stringify($('Merge Campaign ID').first().json.description) }},\n      \"call_to_action\": {\n        \"type\": \"SUBSCRIBE\",\n        \"value\": {\n          \"lead_gen_form_id\": \"{{ $('Create Lead Form').first().json.id }}\"\n        }\n      }\n    }\n  },\n  \"access_token\": \"{{ $('Merge Campaign ID').first().json.access_token }}\"\n}",
+        "options": {}
+      },
+      "id": "ce04f95a-0c46-4b6e-9eb9-7dcb689d4aef",
+      "name": "Create Ad Creative",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v25.0/act_{{ $('Merge Campaign ID').first().json.ad_account_id }}/ads",
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "=name=Ad_{{ encodeURIComponent($('Merge Campaign ID').first().json.campaign_name) }}&adset_id={{ $('Create Ad Set (PAUSED)').first().json.id }}&creative={\"creative_id\":\"{{ $('Create Ad Creative').first().json.id }}\"}&status=PAUSED&access_token={{ $('Merge Campaign ID').first().json.access_token }}",
+        "options": {}
+      },
+      "id": "be5ba0d8-e61e-44ad-b1da-aa6ee83c0652",
+      "name": "Create Ad (PAUSED)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1104,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY",
+          "mode": "list",
+          "cachedResultName": "Visa Ad Automation - Test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Ad Campaigns",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_id": "={{ $('Merge Campaign ID').first().json.row_id }}",
+            "status": "done",
+            "created_campaign_id": "={{ $('Merge Campaign ID').first().json.campaign_id }}",
+            "created_adset_id": "={{ $('Create Ad Set (PAUSED)').first().json.id }}",
+            "created_ad_id": "={{ $('Create Ad (PAUSED)').first().json.id }}",
+            "ai_generated_copy": "={{ $('Merge Campaign ID').first().json.primary_text }}",
+            "created_form_id": "={{ $('Create Lead Form').first().json.id }}"
+          },
+          "matchingColumns": [
+            "row_id"
+          ],
+          "schema": [
+            {
+              "id": "row_id",
+              "displayName": "row_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "brief",
+              "displayName": "brief",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "scheduled_date",
+              "displayName": "scheduled_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "scheduled_time",
+              "displayName": "scheduled_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "daily_budget_inr",
+              "displayName": "daily_budget_inr",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "platform",
+              "displayName": "platform",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "campaign_id",
+              "displayName": "campaign_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_campaign_id",
+              "displayName": "created_campaign_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_adset_id",
+              "displayName": "created_adset_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_ad_id",
+              "displayName": "created_ad_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_form_id",
+              "displayName": "created_form_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ai_generated_copy",
+              "displayName": "ai_generated_copy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "14864bec-a48e-4abe-a2df-2ff768fb5af6",
+      "name": "Update Sheet - Done",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1328,
+        128
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Dq8gwWNvo1Lo2KtO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY",
+          "mode": "list",
+          "cachedResultName": "Visa Ad Automation - Test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Ad Campaigns",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ehf18n760MqQjcprsgA5GuDw8Mm-gj2CrP1iiVYh9jY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "row_id"
+          ],
+          "schema": [
+            {
+              "id": "row_id",
+              "displayName": "row_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "brief",
+              "displayName": "brief",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "scheduled_date",
+              "displayName": "scheduled_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "scheduled_time",
+              "displayName": "scheduled_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "daily_budget_inr",
+              "displayName": "daily_budget_inr",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "platform",
+              "displayName": "platform",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "campaign_id",
+              "displayName": "campaign_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_campaign_id",
+              "displayName": "created_campaign_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_adset_id",
+              "displayName": "created_adset_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_ad_id",
+              "displayName": "created_ad_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ai_generated_copy",
+              "displayName": "ai_generated_copy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b4d4aaea-232d-41f3-bce8-9d43eaf0b347",
+      "name": "Update Sheet - Error",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        880,
+        368
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Dq8gwWNvo1Lo2KtO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v25.0/{{ $('Merge Campaign ID').first().json.page_id }}/leadgen_forms",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"Lead Form - {{ $('Merge Campaign ID').first().json.campaign_name }}\",\n  \"questions\": [\n    {\"type\": \"FULL_NAME\"},\n    {\"type\": \"EMAIL\"},\n    {\"type\": \"PHONE\"},\n    {\n      \"type\": \"CUSTOM\",\n      \"key\": \"preferred_country\",\n      \"label\": \"Which country do you want to study in?\",\n      \"options\": [\n        {\"key\": \"uk\", \"value\": \"United Kingdom\"},\n        {\"key\": \"germany\", \"value\": \"Germany\"},\n        {\"key\": \"france\", \"value\": \"France\"},\n        {\"key\": \"other\", \"value\": \"Other\"}\n      ]\n    }\n  ],\n  \"privacy_policy\": {\n    \"url\": \"{{ $('Merge Campaign ID').first().json.landing_url }}\",\n    \"link_text\": \"Privacy Policy\"\n  },\n  \"thank_you_page\": {\n    \"title\": \"Thank You!\",\n    \"body\": \"Our team will contact you within 24 hours with personalized guidance for your study abroad journey.\",\n    \"button_text\": \"Visit Website\",\n    \"button_type\": \"VIEW_WEBSITE\",\n    \"website_url\": \"{{ $('Merge Campaign ID').first().json.landing_url }}\"\n  },\n  \"follow_up_action_url\": \"{{ $('Merge Campaign ID').first().json.landing_url }}\",\n  \"access_token\": \"{{ $('Merge Campaign ID').first().json.access_token }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        656,
+        128
+      ],
+      "id": "148c2878-96e6-4eab-a50c-5b9dbf54ca98",
+      "name": "Create Lead Form"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Check Every 30 Min": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Config (EDIT THIS)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Config (EDIT THIS)": {
+      "main": [
+        [
+          {
+            "node": "Read Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Google Sheet": {
+      "main": [
+        [
+          {
+            "node": "Filter Pending Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Pending Rows": {
+      "main": [
+        [
+          {
+            "node": "Set Status Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Status Processing": {
+      "main": [
+        [
+          {
+            "node": "AI Generate Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Generate Campaign": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Output": {
+      "main": [
+        [
+          {
+            "node": "Has Campaign ID?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Campaign ID?": {
+      "main": [
+        [
+          {
+            "node": "Use Existing Campaign ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Campaign (PAUSED)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Campaign (PAUSED)": {
+      "main": [
+        [
+          {
+            "node": "Merge Campaign ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Existing Campaign ID": {
+      "main": [
+        [
+          {
+            "node": "Merge Campaign ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Campaign ID": {
+      "main": [
+        [
+          {
+            "node": "Create Ad Set (PAUSED)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Ad Set (PAUSED)": {
+      "main": [
+        [
+          {
+            "node": "Create Lead Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Ad Creative": {
+      "main": [
+        [
+          {
+            "node": "Create Ad (PAUSED)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Ad (PAUSED)": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet - Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Lead Form": {
+      "main": [
+        [
+          {
+            "node": "Create Ad Creative",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7f67a20b-b9ef-478e-ad16-8c78e9e74d04",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "25e830725534faf13695e5fe80f63d017be13487197c74bfe8f840b7a7545d9d"
+  },
+  "id": "ePgcX43NTZg0WWZ3",
+  "tags": []
+}
